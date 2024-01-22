@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+#  saga-app:
+#    build:
+#      context: .
+#      dockerfile: dockerfile
+#    container_name: saga-app
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - mariadb3306
+#      - mariadb3307
+#      - flyway3306
+#      - flyway3307
+
+  mariadb3306:
+    image: mariadb
+    container_name: mariadb3306
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: database3306
+      MYSQL_USER: user3306
+      MYSQL_PASSWORD: password3306
+    volumes:
+      - mariadb3306_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  mariadb3307:
+    image: mariadb
+    container_name: mariadb3307
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: database3307
+      MYSQL_USER: user3307
+      MYSQL_PASSWORD: password3307
+    volumes:
+      - mariadb3307_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  flyway3306:
+    image: flyway/flyway
+    container_name: flyway3306
+    volumes:
+      - ./flyway/migrations:/flyway/sql
+    depends_on:
+      - mariadb3306
+    command: ["-url=jdbc:mariadb://mariadb3306:3306/database3306", "-user=user3306", "-password=password3306", "migrate"]
+
+  flyway3307:
+    image: flyway/flyway
+    container_name: flyway3307
+    volumes:
+      - ./flyway/migrations:/flyway/sql
+    depends_on:
+      - mariadb3307
+    command: ["-url=jdbc:mariadb://mariadb3307:3306/database3307", "-user=user3307", "-password=password3307", "migrate"]
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # RabbitMQ default port
+      - "15672:15672"  # RabbitMQ Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+      RABBITMQ_ERLANG_COOKIE: random_cookie_value  # Change this to a random value
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  mariadb3306_data:
+  mariadb3307_data:
+  rabbitmq_data:
