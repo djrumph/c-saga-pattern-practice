@@ -5,26 +5,22 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import saga.messaging.OrderProcessingMessage;
 import saga.order.model.BikeOrderRequest;
 import saga.order.model.OrderDetails;
 import saga.order.model.ProcessedOrders;
 import saga.order.repository.OrderDetailsRepository;
 import saga.order.repository.ProcessedOrdersRepository;
 
-@Service
+@Component
 public class BikeOrderService {
 
   @Autowired
-  private RabbitTemplate rabbitTemplate;
-
-  @Autowired
   private OrderDetailsRepository orderDetailsRepository;
-
   @Autowired
   private ProcessedOrdersRepository processedOrdersRepository;
 
@@ -32,28 +28,33 @@ public class BikeOrderService {
 
   @Transactional
   public void processBikeOrder(BikeOrderRequest bikeOrderRequest) {
+    OrderDetails orderDetails = OrderDetails
+        .builder()
+        .orderDate(LocalDateTime.now())
+        .bikeModel(bikeOrderRequest.getBikeModel())
+        .quantity(bikeOrderRequest.getQuantity())
+        .customerName(bikeOrderRequest.getCustomerName())
+        .orderId(bikeOrderRequest.getId())
+        .build();
 
-    // Create a message for the next step (order processing)
-    OrderProcessingMessage orderProcessingMessage
-        = OrderProcessingMessage
-          .builder()
-          .type("order")
-          .bikeOrderRequest(bikeOrderRequest)
-          .build();
+    orderDetailsRepository.save(orderDetails);
 
-    // Send the message to the RabbitMQ queue
-    rabbitTemplate.convertAndSend("orderProcessingQueue", orderProcessingMessage);
+    //write to another table to test ou transactions
+  }
 
+  @Transactional
+  public void rollbackBikeOrder(BikeOrderRequest bikeOrderRequest) {
+    OrderDetails orderDetails = OrderDetails
+        .builder()
+        .orderDate(LocalDateTime.now())
+        .bikeModel(bikeOrderRequest.getBikeModel())
+        .quantity(bikeOrderRequest.getQuantity())
+        .customerName(bikeOrderRequest.getCustomerName())
+        .orderId(bikeOrderRequest.getId())
+        .build();
 
+    orderDetailsRepository.delete(orderDetails);
 
-//    orderDetailsRepository.save(orderDetails);
-//
-//    // Process the order (in this example, just mark it as processed)
-//    ProcessedOrders processedOrder = new ProcessedOrders();
-//    processedOrder.setOrderId(orderDetails.getOrderId());
-//    processedOrder.setProcessingDate(LocalDateTime.now());
-//    processedOrder.setDeliveryStatus("Processed");
-//
-//    processedOrdersRepository.save(processedOrder);
+    //delete from another table to test transactions
   }
 }

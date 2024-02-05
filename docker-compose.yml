@@ -68,20 +68,20 @@ services:
       - mariadb3307
     command: ["-url=jdbc:mariadb://mariadb3307:3306/database3307", "-user=user3307", "-password=password3307", "migrate"]
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"  # RabbitMQ default port
-      - "15672:15672"  # RabbitMQ Management UI port
-    environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: password
-      RABBITMQ_ERLANG_COOKIE: random_cookie_value  # Change this to a random value
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+#  rabbitmq:
+#    image: rabbitmq:3-management
+#    container_name: rabbitmq
+#    ports:
+#      - "5672:5672"  # RabbitMQ default port
+#      - "15672:15672"  # RabbitMQ Management UI port
+#    environment:
+#      RABBITMQ_DEFAULT_USER: user
+#      RABBITMQ_DEFAULT_PASS: password
+#      RABBITMQ_ERLANG_COOKIE: random_cookie_value  # Change this to a random value
+#    volumes:
+#      - rabbitmq_data:/var/lib/rabbitmq
 
 volumes:
   mariadb3306_data:
   mariadb3307_data:
-  rabbitmq_data:
+#  rabbitmq_data:

@@ -28,6 +28,24 @@ public class OrderDetailsRepository {
     this.jdbcTemplate = new JdbcTemplate(dataSource3306);
   }
 
+  public void delete(OrderDetails orderDetails) {
+    String deleteOrderDetailsSql =
+        """
+          DELETE FROM order_details 
+          WHERE order_id = ?
+        """;
+    
+    jdbcTemplate.update(new PreparedStatementCreator() {
+      @Override
+      public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+
+        PreparedStatement ps = connection.prepareStatement(deleteOrderDetailsSql, Statement.NO_GENERATED_KEYS);
+        ps.setInt(1, orderDetails.getOrderId());
+        return ps;
+      }
+    });
+  }
+
   public long save(OrderDetails orderDetails) {
     String insertOrderDetailsSql =
         """
@@ -35,9 +53,10 @@ public class OrderDetailsRepository {
             customer_name, 
             bike_model, 
             quantity, 
-            order_date
+            order_date, 
+            order_id
            ) 
-          VALUES (?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?)
         """;
 
     KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -51,6 +70,7 @@ public class OrderDetailsRepository {
         ps.setString(2, orderDetails.getBikeModel());
         ps.setInt(3, orderDetails.getQuantity());
         ps.setTimestamp(4, Timestamp.valueOf(orderDetails.getOrderDate()));
+        ps.setInt(5, orderDetails.getOrderId());
         return ps;
       }
     }, keyHolder);
